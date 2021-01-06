@@ -5,7 +5,7 @@
     <LangVersion>8.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Lizelaser0310.Utilities</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.0.3</Version>
     <Authors>Lizeth La Serna, Gedy Palomino</Authors>
     <Company>LizssdhddGedzeppelin</Company>
     <PackageProjectUrl>https://github.com/Lizelaser0310/cs-utilities</PackageProjectUrl>

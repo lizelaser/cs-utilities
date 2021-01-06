@@ -5,7 +5,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 
-namespace Utilities
+namespace Lizelaser0310.Utilities
 {
     public class ImagenUtilidad
     {

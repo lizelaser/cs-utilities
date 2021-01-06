@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Utilities
+namespace Lizelaser0310.Utilities
 {
 
     public static class PaginadorUtilidad

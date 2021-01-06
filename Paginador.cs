@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Utilities
+namespace Lizelaser0310.Utilities
 {
     public class Paginador<T> where T : class
     {
