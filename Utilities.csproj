@@ -10,6 +10,7 @@
     <Company>LizssdhddGedzeppelin</Company>
     <PackageProjectUrl>https://github.com/Lizelaser0310/cs-utilities</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Lizelaser0310/cs-utilities.git</RepositoryUrl>
+    <PackageVersion>0.0.4</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -20,6 +21,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
+    <PackageReference Include="NaCl.Net" Version="0.1.13" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
   </ItemGroup>
 

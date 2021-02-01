@@ -12,6 +12,11 @@ namespace Lizelaser0310.Utilities
         private const string WwwPathSlice = "wwwroot";
         private const string ImagePathSlice = "imagen";
 
+        public static string ObtenerRuta(HttpRequest request)
+        {
+            return $"{request.Scheme}://{request.Host}/{ImagePathSlice}/";
+        }
+
         /// <exception cref="ImagenUtilidadException" />
         public static string GuardarImagen(string leftPath, string base64String)
         {

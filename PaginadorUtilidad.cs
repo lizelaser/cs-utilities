@@ -9,15 +9,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+// ReSharper disable once CheckNamespace
 namespace Lizelaser0310.Utilities
 {
 
     public static class PaginadorUtilidad
     {
-        private const int paginaDefecto = 1;
-        private const int registrosPorPaginaDefecto = 10;
+        private const int PaginaDefecto = 1;
+        private const int RegistrosPorPaginaDefecto = 10;
 
-        private static int getIntParam(NameValueCollection queryParams, string name, int def)
+        private static int GetIntParam(NameValueCollection queryParams, string name, int def)
         {
             string p = queryParams.Get(name);
             if (p != null)
@@ -53,15 +54,8 @@ namespace Lizelaser0310.Utilities
         {
             NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
 
-            int pagina = getIntParam(queryParams, "pagina", paginaDefecto);
-            int registrosPorPagina = getIntParam(queryParams, "registrosPorPagina", registrosPorPaginaDefecto);
-
-            int totalRegistros;
-            int totalPaginas;
-
-            List<T> listado;
-            IQueryable<T> preAfter;
-            IQueryable<T> afterQuery;
+            int pagina = GetIntParam(queryParams, "pagina", PaginaDefecto);
+            int registrosPorPagina = GetIntParam(queryParams, "registrosPorPagina", RegistrosPorPaginaDefecto);
 
             try
             {
@@ -70,26 +64,26 @@ namespace Lizelaser0310.Utilities
                 var preMiddle = beforeQuery.OrderBy("Id");
                 var middleQuery = (middle != null) ? middle(preMiddle, queryParams) : preMiddle;
 
-                totalRegistros = await middleQuery.CountAsync();
+                int totalRegistros = await middleQuery.CountAsync();
 
+                int totalPaginas;
+                List<T> listado;
+                
                 if (registrosPorPagina > 0)
                 {
-                    preAfter = middleQuery.Skip((pagina - 1) * registrosPorPagina).Take(registrosPorPagina);
-                    afterQuery = (after != null) ? after(preAfter, queryParams) : preAfter;
+                    IQueryable<T> preAfter = middleQuery.Skip((pagina - 1) * registrosPorPagina).Take(registrosPorPagina);
+                    listado = await ((after != null) ? after(preAfter, queryParams) : preAfter).ToListAsync();
 
                     totalPaginas = (int)Math.Ceiling((double)totalRegistros / registrosPorPagina);
                 }
                 else
                 {
-                    preAfter = middleQuery;
-                    afterQuery = (after != null) ? after(preAfter, queryParams) : preAfter;
+                    listado = await ((after != null) ? after(middleQuery, queryParams) : middleQuery).ToListAsync();
 
                     totalPaginas = 1;
                     registrosPorPagina = totalRegistros;
                 }
-
-                listado = await afterQuery.ToListAsync();
-
+                
                 Paginador<T> resultado = new Paginador<T>()
                 {
                     RegistrosPorPagina = registrosPorPagina,
@@ -97,6 +91,67 @@ namespace Lizelaser0310.Utilities
                     TotalPaginas = totalPaginas,
                     PaginaActual = pagina,
                     Listado = listado
+                };
+
+                return new OkObjectResult(resultado);
+            }
+            catch (Exception e)
+            {
+                ObjectResult respuesta = new ObjectResult(e.Message);
+                respuesta.StatusCode = StatusCodes.Status500InternalServerError;
+                return respuesta;
+            }
+        }
+        // ReSharper disable once InconsistentNaming
+        public static async Task<ActionResult<Paginador<R>>> Paginar<T,R>(
+            string query,
+            DbSet<T> dbSet,
+            Func<IQueryable<T>,IQueryable<R>> mutation,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> before = null,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> middle = null,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> after = null
+        ) where T : class
+          where R : class
+        {
+            NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
+
+            int pagina = GetIntParam(queryParams, "pagina", PaginaDefecto);
+            int registrosPorPagina = GetIntParam(queryParams, "registrosPorPagina", RegistrosPorPaginaDefecto);
+
+            try
+            {
+                var beforeQuery = (before != null) ? before(dbSet, queryParams) : dbSet;
+
+                var preMiddle = beforeQuery.OrderBy("Id");
+                var middleQuery = (middle != null) ? middle(preMiddle, queryParams) : preMiddle;
+
+                int totalRegistros = await middleQuery.CountAsync();
+
+                int totalPaginas;
+                IQueryable<R> preList;
+                
+                if (registrosPorPagina > 0)
+                {
+                    IQueryable<T> preAfter = middleQuery.Skip((pagina - 1) * registrosPorPagina).Take(registrosPorPagina);
+                    preList = mutation((after != null) ? after(preAfter, queryParams) : preAfter);
+
+                    totalPaginas = (int)Math.Ceiling((double)totalRegistros / registrosPorPagina);
+                }
+                else
+                {
+                    preList = mutation((after != null) ? after(middleQuery, queryParams) : middleQuery);
+
+                    totalPaginas = 1;
+                    registrosPorPagina = totalRegistros;
+                }
+                
+                Paginador<R> resultado = new Paginador<R>()
+                {
+                    RegistrosPorPagina = registrosPorPagina,
+                    TotalRegistros = totalRegistros,
+                    TotalPaginas = totalPaginas,
+                    PaginaActual = pagina,
+                    Listado = await preList.ToListAsync()
                 };
 
                 return new OkObjectResult(resultado);
