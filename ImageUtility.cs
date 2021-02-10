@@ -7,18 +7,18 @@ using Microsoft.AspNetCore.Http;
 
 namespace Lizelaser0310.Utilities
 {
-    public class ImagenUtilidad
+    public static class ImageUtility
     {
         private const string WwwPathSlice = "wwwroot";
         private const string ImagePathSlice = "imagen";
 
-        public static string ObtenerRuta(HttpRequest request)
+        public static string GetPath(HttpRequest request)
         {
             return $"{request.Scheme}://{request.Host}/{ImagePathSlice}/";
         }
 
-        /// <exception cref="ImagenUtilidadException" />
-        public static string GuardarImagen(string leftPath, string base64String)
+        /// <exception cref="ImageUtilityException" />
+        public static string SaveImage(string leftPath, string base64String)
         {
             try
             {
@@ -28,8 +28,8 @@ namespace Lizelaser0310.Utilities
                 Guid uuid = System.Guid.NewGuid();
                 string filePath = uuid.ToString() + ".jpg";
 
-                string _dirPath = Path.Join(leftPath.AsSpan(), WwwPathSlice.AsSpan(), ImagePathSlice.AsSpan());
-                string dirPath = Path.Join(_dirPath, filePath.AsSpan());
+                string wwwPath = Path.Join(leftPath.AsSpan(), WwwPathSlice.AsSpan(), ImagePathSlice.AsSpan());
+                string dirPath = Path.Join(wwwPath, filePath.AsSpan());
 
                 bm2.Save(dirPath, System.Drawing.Imaging.ImageFormat.Jpeg);
 
@@ -37,11 +37,11 @@ namespace Lizelaser0310.Utilities
             }
             catch (Exception e)
             {
-                throw new ImagenUtilidadException(e.Message);
+                throw new ImageUtilityException(e.Message);
             }
         }
 
-        public static void CrearImagenUrl<T>(T item, HttpRequest request, string propName = "Imagen")
+        public static void CreateImageUrl<T>(T item, HttpRequest request, string propName = "Imagen")
         {
             PropertyInfo prop = item.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
 
@@ -53,7 +53,7 @@ namespace Lizelaser0310.Utilities
             prop.SetValue(item, url, null);
         }
 
-        public static void CrearImagenUrls<T>(IEnumerable<T> items, HttpRequest request)
+        public static void CreateImageUrls<T>(IEnumerable<T> items, HttpRequest request)
         {
             string left = $"{request.Scheme}://{request.Host}/{ImagePathSlice}/";
 
@@ -72,15 +72,15 @@ namespace Lizelaser0310.Utilities
     }
 
     [Serializable()]
-    public class ImagenUtilidadException : System.Exception
+    public class ImageUtilityException : Exception
     {
-        public ImagenUtilidadException() : base() { }
-        public ImagenUtilidadException(string message) : base(message) { }
-        public ImagenUtilidadException(string message, System.Exception inner) : base(message, inner) { }
+        public ImageUtilityException() : base() { }
+        public ImageUtilityException(string message) : base(message) { }
+        public ImageUtilityException(string message, System.Exception inner) : base(message, inner) { }
 
         // A constructor is needed for serialization when an
         // exception propagates from a remoting server to the client.
-        protected ImagenUtilidadException(System.Runtime.Serialization.SerializationInfo info,
+        protected ImageUtilityException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

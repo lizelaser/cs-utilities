@@ -4,10 +4,9 @@ using System.Security.Cryptography;
 using System.Text;
 using NaCl;
 
-// ReSharper disable once CheckNamespace
 namespace Lizelaser0310.Utilities
 {
-    public static class AutenticacionUtilidad
+    public static class AuthUtility
     {
         public static string HashPassword(string pass, byte[] encryptionKey)
         {

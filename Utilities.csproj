@@ -10,7 +10,8 @@
     <Company>LizssdhddGedzeppelin</Company>
     <PackageProjectUrl>https://github.com/Lizelaser0310/cs-utilities</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Lizelaser0310/cs-utilities.git</RepositoryUrl>
-    <PackageVersion>0.0.4</PackageVersion>
+    <PackageVersion>0.0.5</PackageVersion>
+    <RootNamespace>Lizelaser0310.Utilities</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -18,11 +19,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Algolia.Search" Version="6.9.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
+    <PackageReference Include="MockQueryable.Core" Version="5.0.0" />
     <PackageReference Include="NaCl.Net" Version="0.1.13" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
+    <PackageReference Include="System.Text.Json" Version="5.0.1" />
   </ItemGroup>
 
 </Project>
