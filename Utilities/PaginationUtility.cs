@@ -50,7 +50,31 @@ namespace Lizelaser0310.Utilities
             return def;
         }
 
-        public static async Task<ActionResult<Paginator<T>>> AlgoliaPaginate<T>(
+        public static async Task<ActionResult> Paginate<T,I>(
+            string query,
+            DbSet<T> dbSet,
+            SearchClient algolia,
+            string indexUid,
+            int totalItems,
+            Func<IQueryable<T>, string, IQueryable<T>> searchProps = null,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> before = null,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> middle = null,
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> after = null
+        ) where T:class
+          where I:class
+        {
+            NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
+            bool useDB = GetParam(queryParams, "useDB", false);
+            
+            if (useDB)
+            {
+                return await Paginate(query, dbSet, searchProps, before, middle, after);
+            }
+
+            return await AlgoliaPaginate<I>(query, indexUid, algolia, totalItems);
+        }
+
+        public static async Task<ActionResult> AlgoliaPaginate<T>(
             string query,
             string indexUid,
             SearchClient algolia,
@@ -62,19 +86,37 @@ namespace Lizelaser0310.Utilities
             int page = GetIntParam(queryParams, "page", DefaultPage);
             int itemsPerPage = GetIntParam(queryParams, "itemsPerPage", DefaultItemsPerPage);
             string search = GetParam(queryParams, "search", "");
-
+            int first = GetIntParam(queryParams, "first", 0);
+            
             SearchIndex index = algolia.InitIndex(indexUid);
+
+            bool hasFirst = false;
+
+            List<T> items = new List<T>();
+            if (first>0)
+            {
+                var firstEntity = await index.GetObjectAsync<T>(first.ToString());
+                if (firstEntity != null)
+                {
+                    itemsPerPage -= 1;
+                    items.Add(firstEntity);
+                    hasFirst = true;
+                }
+            }
+            
             var result = await index.SearchAsync<T>(new Query(search)
             {
-                HitsPerPage = itemsPerPage,
+                HitsPerPage = itemsPerPage>=0?itemsPerPage:1000,
                 Page = page - 1,
             });
+            
+            items.AddRange(result.Hits);
 
             var paginator = new Paginator<T>()
             {
                 CurrentPage = result.Page + 1,
-                ItemsPerPage = result.HitsPerPage,
-                Items = result.Hits,
+                ItemsPerPage = hasFirst ? result.HitsPerPage+1 : result.HitsPerPage,
+                Items = items,
                 TotalItems = result.NbHits,
                 TotalPages = result.NbPages
             };
@@ -84,7 +126,7 @@ namespace Lizelaser0310.Utilities
             return obj;
         }
 
-        public static async Task<ActionResult<Paginator<T>>> MeiliPaginate<T>(
+        public static async Task<ActionResult> MeiliPaginate<T>(
             string query,
             string indexUid,
             string masterKey,
@@ -141,7 +183,7 @@ namespace Lizelaser0310.Utilities
             return new StatusCodeResult(StatusCodes.Status500InternalServerError);
         }
 
-        public static async Task<ActionResult<Paginator<T>>> Paginate<T>(
+        public static async Task<ActionResult> Paginate<T>(
             string query,
             DbSet<T> dbSet,
             Func<IQueryable<T>, string, IQueryable<T>> searchProps = null,
@@ -155,6 +197,21 @@ namespace Lizelaser0310.Utilities
             int page = GetIntParam(queryParams, "page", DefaultPage);
             int itemsPerPage = GetIntParam(queryParams, "itemsPerPage", DefaultItemsPerPage);
             string search = GetParam(queryParams, "search", "");
+            int first = GetIntParam(queryParams, "first", 0);
+
+            List<T> items = new List<T>();
+            var hasFirst = false;
+            
+            if (first>0)
+            {
+                var firstEntity = await dbSet.FindAsync(first);
+                if (firstEntity != null)
+                {
+                    itemsPerPage -= 1;
+                    items.Add(firstEntity);
+                    hasFirst = true;
+                }
+            }
 
             var beforeQuery = (before != null) ? before(dbSet, queryParams) : dbSet;
 
@@ -169,26 +226,25 @@ namespace Lizelaser0310.Utilities
             int totalItems = await middleQuery.CountAsync();
 
             int totalPages;
-            List<T> items;
 
             if (itemsPerPage > 0)
             {
                 IQueryable<T> preAfter = middleQuery.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
-                items = await ((after != null) ? after(preAfter, queryParams) : preAfter).ToListAsync();
-
+                var dbItems = await ((after != null) ? after(preAfter, queryParams) : preAfter).ToListAsync();
+                items.AddRange(dbItems);
                 totalPages = (int)Math.Ceiling((double)totalItems / itemsPerPage);
             }
             else
             {
-                items = await ((after != null) ? after(middleQuery, queryParams) : middleQuery).ToListAsync();
-
+                var dbItems = await ((after != null) ? after(middleQuery, queryParams) : middleQuery).ToListAsync();
+                items.AddRange(dbItems);
                 totalPages = 1;
                 itemsPerPage = totalItems;
             }
 
             Paginator<T> result = new Paginator<T>()
             {
-                ItemsPerPage = itemsPerPage,
+                ItemsPerPage = hasFirst ? itemsPerPage+1 : itemsPerPage,
                 TotalItems = totalItems,
                 TotalPages = totalPages,
                 CurrentPage = page,
@@ -198,10 +254,10 @@ namespace Lizelaser0310.Utilities
             return new OkObjectResult(result);
         }
         // ReSharper disable once InconsistentNaming
-        public static async Task<ActionResult<Paginator<R>>> Paginate<T, R>(
+        public static async Task<ActionResult> Paginate<T, R>(
             string query,
             DbSet<T> dbSet,
-            Func<IQueryable<T>, IQueryable<R>> mutation,
+            Func<T, R> mutation,
             Func<IQueryable<T>, string, IQueryable<T>> searchProps = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> before = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> middle = null,
@@ -214,6 +270,21 @@ namespace Lizelaser0310.Utilities
             int page = GetIntParam(queryParams, "page", DefaultPage);
             int itemsPerPage = GetIntParam(queryParams, "itemsPerPage", DefaultItemsPerPage);
             string search = GetParam(queryParams, "search", "");
+            int first = GetIntParam(queryParams, "first", 0);
+
+            List<R> items = new List<R>();
+            var hasFirst = false;
+
+            if (first>0)
+            {
+                var firstEntity = await dbSet.FindAsync(first);
+                if (firstEntity != null)
+                {
+                    itemsPerPage -= 1;
+                    items.Add(mutation(firstEntity));
+                    hasFirst = true;
+                }
+            }
 
             var beforeQuery = (before != null) ? before(dbSet, queryParams) : dbSet;
 
@@ -228,25 +299,30 @@ namespace Lizelaser0310.Utilities
             if (itemsPerPage > 0)
             {
                 IQueryable<T> preAfter = middleQuery.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
-                preList = mutation((after != null) ? after(preAfter, queryParams) : preAfter);
+                preList = (after != null) 
+                    ? after(preAfter, queryParams).Select(x=>mutation(x)) 
+                    : preAfter.Select(x=>mutation(x));
 
                 totalPages = (int)Math.Ceiling((double)totalItems / itemsPerPage);
             }
             else
             {
-                preList = mutation((after != null) ? after(middleQuery, queryParams) : middleQuery);
+                preList = (after != null) 
+                    ? after(middleQuery, queryParams).Select(x=>mutation(x)) 
+                    : middleQuery.Select(x=>mutation(x));
 
                 totalPages = 1;
                 itemsPerPage = totalItems;
             }
+            items.AddRange(await preList.ToListAsync());
 
             Paginator<R> resultado = new Paginator<R>()
             {
-                ItemsPerPage = itemsPerPage,
+                ItemsPerPage = hasFirst ? itemsPerPage+1 : itemsPerPage,
                 TotalItems = totalItems,
                 TotalPages = totalPages,
                 CurrentPage = page,
-                Items = await preList.ToListAsync()
+                Items = items
             };
 
             return new OkObjectResult(resultado);
