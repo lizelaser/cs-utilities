@@ -20,6 +20,11 @@ namespace Lizelaser0310.Utilities
         /// <exception cref="ImageUtilityException" />
         public static string SaveImage(string leftPath, string base64String)
         {
+            if (leftPath==null || base64String==null)
+            {
+                return null;
+            }
+            
             try
             {
                 using MemoryStream ms = new MemoryStream(Convert.FromBase64String(base64String));
@@ -48,6 +53,12 @@ namespace Lizelaser0310.Utilities
             if (prop is null || !prop.CanWrite) return;
 
             string imagen = (string)prop.GetValue(item);
+
+            if (imagen == null)
+            {
+                return;
+            }
+            
             string url = $"{request.Scheme}://{request.Host}/{ImagePathSlice}/{imagen}";
 
             prop.SetValue(item, url, null);
@@ -64,6 +75,11 @@ namespace Lizelaser0310.Utilities
                 if (prop is null || !prop.CanWrite) continue;
 
                 string imagen = (string)prop.GetValue(item);
+
+                if (imagen == null)
+                {
+                    continue;
+                }
                 string url = $"{left}{imagen}";
 
                 prop.SetValue(item, url, null);
