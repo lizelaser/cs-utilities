@@ -22,7 +22,7 @@ namespace Lizelaser0310.Utilities
         private const int DefaultPage = 1;
         private const int DefaultItemsPerPage = 5;
 
-        private static int GetIntParam(NameValueCollection queryParams, string name, int def)
+        public static int GetIntParam(NameValueCollection queryParams, string name, int def)
         {
             string p = queryParams.Get(name);
             if (p != null)
@@ -78,7 +78,8 @@ namespace Lizelaser0310.Utilities
             string query,
             string indexUid,
             SearchClient algolia,
-            int totalItems
+            int totalItems,
+            Dictionary<string,dynamic> metadata = null
         ) where T : class
         {
             NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
@@ -118,7 +119,8 @@ namespace Lizelaser0310.Utilities
                 ItemsPerPage = hasFirst ? result.HitsPerPage+1 : result.HitsPerPage,
                 Items = items,
                 TotalItems = result.NbHits,
-                TotalPages = result.NbPages
+                TotalPages = result.NbPages,
+                Metadata = metadata
             };
 
             var obj = new ObjectResult(paginator);
@@ -189,7 +191,8 @@ namespace Lizelaser0310.Utilities
             Func<IQueryable<T>, string, IQueryable<T>> searchProps = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> before = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> middle = null,
-            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> after = null
+            Func<IQueryable<T>, NameValueCollection, IQueryable<T>> after = null,
+            Dictionary<string,dynamic> metadata = null
         ) where T : class
         {
             NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
@@ -248,7 +251,8 @@ namespace Lizelaser0310.Utilities
                 TotalItems = totalItems,
                 TotalPages = totalPages,
                 CurrentPage = page,
-                Items = items
+                Items = items,
+                Metadata = metadata
             };
 
             return new OkObjectResult(result);

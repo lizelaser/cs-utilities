@@ -6,8 +6,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Lizelaser0310.Utilities</RootNamespace>
     <PackageId>Lizelaser0310.Utilities</PackageId>
-    <PackageVersion>0.1.0</PackageVersion>
-    <Version>0.1.0</Version>
+    <PackageVersion>0.1.11</PackageVersion>
+    <Version>0.1.11</Version>
     <Authors>Lizeth La Serna, Gedy Palomino</Authors>
     <Company>Lizelaser0310</Company>
     <PackageProjectUrl>https://github.com/Lizelaser0310/cs-utilities</PackageProjectUrl>
@@ -20,9 +20,12 @@
 
   <ItemGroup>
     <PackageReference Include="Algolia.Search" Version="6.9.1" />
+    <PackageReference Include="MailKit" Version="2.11.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
+    <PackageReference Include="MimeKit" Version="2.11.0" />
     <PackageReference Include="NaCl.Net" Version="0.1.13" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="5.0.1" />
