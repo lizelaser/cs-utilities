@@ -200,12 +200,12 @@ namespace Lizelaser0310.Utilities
             int page = GetIntParam(queryParams, "page", DefaultPage);
             int itemsPerPage = GetIntParam(queryParams, "itemsPerPage", DefaultItemsPerPage);
             string search = GetParam(queryParams, "search", "");
-            int first = GetIntParam(queryParams, "first", 0);
+            var first = GetParam<dynamic>(queryParams, "first", null);
 
             List<T> items = new List<T>();
             var hasFirst = false;
             
-            if (first>0)
+            if (first!=null)
             {
                 var firstEntity = await dbSet.FindAsync(first);
                 if (firstEntity != null)
