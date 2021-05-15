@@ -13,6 +13,7 @@ using Algolia.Search.Models.Search;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Nest;
 
 // ReSharper disable once CheckNamespace
 namespace Lizelaser0310.Utilities
@@ -110,7 +111,6 @@ namespace Lizelaser0310.Utilities
                 HitsPerPage = itemsPerPage>=0?itemsPerPage:1000,
                 Page = page - 1,
             });
-            
             items.AddRange(result.Hits);
 
             var paginator = new Paginator<T>()
@@ -120,6 +120,79 @@ namespace Lizelaser0310.Utilities
                 Items = items,
                 TotalItems = result.NbHits,
                 TotalPages = result.NbPages,
+                Metadata = metadata
+            };
+
+            var obj = new ObjectResult(paginator);
+            obj.StatusCode = StatusCodes.Status200OK;
+            return obj;
+        }
+        
+        public static async Task<ActionResult> ElasticSearchPaginate<T>(
+            string query,
+            string indexUid,
+            ElasticClient elastic,
+            int totalItems,
+            Func<T,string> primaryKey,
+            List<Expression<Func<T,dynamic>>> fields,
+            Dictionary<string,dynamic> metadata = null
+        ) where T : class
+        {
+            NameValueCollection queryParams = HttpUtility.ParseQueryString(query);
+
+            int page = GetIntParam(queryParams, "page", DefaultPage);
+            int itemsPerPage = GetIntParam(queryParams, "itemsPerPage", DefaultItemsPerPage);
+            string search = GetParam(queryParams, "search", "");
+            string first = GetParam(queryParams, "first", "");
+            
+            bool hasFirst = false;
+
+            List<T> items = new List<T>();
+            
+            var searchResponse = await elastic.SearchAsync<T>(s => s
+                .Index(indexUid)
+                .From((page-1)*itemsPerPage)
+                .Size(itemsPerPage>=0?itemsPerPage:1000)
+                .Query(q=>
+                    q.MultiMatch(m=>m
+                        .Fields(f =>
+                        {
+                            foreach (var field in fields)
+                            {
+                                f.Field(field);
+                            }
+                            return f;
+                        })
+                        .Query(search)
+                    ))
+                );
+
+            var result = searchResponse.Documents;
+            items.AddRange(result);
+            
+            if (!string.IsNullOrEmpty(first))
+            {
+                var firstEntity = (await elastic.GetAsync<T>(first, idx => idx.Index(indexUid))).Source;
+                if (firstEntity != null)
+                {
+                    var firstList = items.SingleOrDefault(x => primaryKey(x) == first);
+                    if (firstList!=null)
+                    {
+                        items.Remove(firstList);
+                    }
+                    itemsPerPage -= 1;
+                    items.Insert(0,firstEntity);
+                    hasFirst = true;
+                }
+            }
+
+            var paginator = new Paginator<T>()
+            {
+                CurrentPage = page,
+                ItemsPerPage = hasFirst ? itemsPerPage+1 : itemsPerPage,
+                Items = items,
+                TotalItems = Convert.ToInt32(searchResponse.HitsMetadata.Total.Value),
+                TotalPages = (int)Math.Ceiling((double)searchResponse.HitsMetadata.Total.Value / itemsPerPage),
                 Metadata = metadata
             };
 
