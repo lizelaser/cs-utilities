@@ -9,18 +9,16 @@ namespace Lizelaser0310.Utilities
 {
     public static class ImageUtility
     {
-        private const string WwwPathSlice = "wwwroot";
-        private const string ImagePathSlice = "imagen";
 
         public static string GetPath(HttpRequest request)
         {
-            return $"{request.Scheme}://{request.Host}/{ImagePathSlice}/";
+            return $"{request.Scheme}://{request.Host}/";
         }
 
         /// <exception cref="ImageUtilityException" />
-        public static string SaveImage(string leftPath, string base64String)
+        public static string SaveImage(string basePath, string base64String, string imagePathSlice = "Images")
         {
-            if (leftPath==null || base64String==null)
+            if (basePath==null || base64String==null)
             {
                 return null;
             }
@@ -31,10 +29,9 @@ namespace Lizelaser0310.Utilities
                 using Bitmap bm2 = new Bitmap(ms);
 
                 Guid uuid = System.Guid.NewGuid();
-                string filePath = uuid.ToString() + ".jpg";
+                string filePath = uuid + ".jpg";
 
-                string wwwPath = Path.Join(leftPath.AsSpan(), WwwPathSlice.AsSpan(), ImagePathSlice.AsSpan());
-                string dirPath = Path.Join(wwwPath, filePath.AsSpan());
+                string dirPath = Path.Join(basePath.AsSpan(), imagePathSlice.AsSpan(), filePath.AsSpan());
 
                 bm2.Save(dirPath, System.Drawing.Imaging.ImageFormat.Jpeg);
 
@@ -46,7 +43,7 @@ namespace Lizelaser0310.Utilities
             }
         }
 
-        public static void CreateImageUrl<T>(T item, HttpRequest request, string propName = "Imagen")
+        public static void CreateImageUrl<T>(T item, HttpRequest request, string propName = "Imagen", string imagePathSlice="Images")
         {
             PropertyInfo prop = item.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
 
@@ -59,14 +56,14 @@ namespace Lizelaser0310.Utilities
                 return;
             }
             
-            string url = $"{request.Scheme}://{request.Host}/{ImagePathSlice}/{imagen}";
+            string url = $"{request.Scheme}://{request.Host}/{imagePathSlice}/{imagen}";
 
             prop.SetValue(item, url, null);
         }
 
-        public static void CreateImageUrls<T>(IEnumerable<T> items, HttpRequest request)
+        public static void CreateImageUrls<T>(IEnumerable<T> items, HttpRequest request, string imagePathSlice = "Images")
         {
-            string left = $"{request.Scheme}://{request.Host}/{ImagePathSlice}/";
+            string left = $"{request.Scheme}://{request.Host}/{imagePathSlice}/";
 
             foreach (T item in items)
             {
