@@ -6,8 +6,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Lizelaser0310.Utilities</RootNamespace>
     <PackageId>Lizelaser0310.Utilities</PackageId>
-    <PackageVersion>0.1.14</PackageVersion>
-    <Version>0.1.14</Version>
+    <PackageVersion>0.1.15</PackageVersion>
+    <Version>0.1.15</Version>
     <Authors>Lizeth La Serna, Gedy Palomino</Authors>
     <Company>Lizelaser0310</Company>
     <PackageProjectUrl>https://github.com/Lizelaser0310/cs-utilities</PackageProjectUrl>

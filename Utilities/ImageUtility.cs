@@ -16,7 +16,7 @@ namespace Lizelaser0310.Utilities
         }
 
         /// <exception cref="ImageUtilityException" />
-        public static string SaveImage(string basePath, string base64String, string imagePathSlice = "Images")
+        public static string SaveImage(string basePath, string base64String, string fileName, string imagePathSlice = "Images")
         {
             if (basePath==null || base64String==null)
             {
@@ -29,7 +29,7 @@ namespace Lizelaser0310.Utilities
                 using Bitmap bm2 = new Bitmap(ms);
 
                 Guid uuid = System.Guid.NewGuid();
-                string filePath = uuid + ".jpg";
+                string filePath = fileName + ".jpg";
 
                 string dirPath = Path.Join(basePath.AsSpan(), imagePathSlice.AsSpan(), filePath.AsSpan());
 
