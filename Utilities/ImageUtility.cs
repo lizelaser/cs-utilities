@@ -16,7 +16,7 @@ namespace Lizelaser0310.Utilities
         }
 
         /// <exception cref="ImageUtilityException" />
-        public static string SaveImage(string basePath, string base64String, string fileName, string imagePathSlice = "Images")
+        public static string SaveImage(string basePath, string base64String, string fileName=null, string imagePathSlice = "Images")
         {
             if (basePath==null || base64String==null)
             {
@@ -25,13 +25,14 @@ namespace Lizelaser0310.Utilities
             
             try
             {
-                using MemoryStream ms = new MemoryStream(Convert.FromBase64String(base64String));
-                using Bitmap bm2 = new Bitmap(ms);
+                using var ms = new MemoryStream(Convert.FromBase64String(base64String));
+                using var bm2 = new Bitmap(ms);
 
-                Guid uuid = System.Guid.NewGuid();
-                string filePath = fileName + ".jpg";
+                var filePath = $"{fileName??Guid.NewGuid().ToString()}.jpg";
 
-                string dirPath = Path.Join(basePath.AsSpan(), imagePathSlice.AsSpan(), filePath.AsSpan());
+                var dirPath = Path.Join(basePath.AsSpan(), imagePathSlice.AsSpan(), filePath.AsSpan());
+
+                new FileInfo(dirPath).Directory?.Create();
 
                 bm2.Save(dirPath, System.Drawing.Imaging.ImageFormat.Jpeg);
 
