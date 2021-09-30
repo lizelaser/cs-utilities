@@ -56,7 +56,6 @@ namespace Lizelaser0310.Utilities
             DbSet<T> dbSet,
             SearchClient algolia,
             string indexUid,
-            int totalItems,
             Func<IQueryable<T>, string, IQueryable<T>> searchProps = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> before = null,
             Func<IQueryable<T>, NameValueCollection, IQueryable<T>> middle = null,
@@ -72,14 +71,13 @@ namespace Lizelaser0310.Utilities
                 return await Paginate(query, dbSet, searchProps, before, middle, after);
             }
 
-            return await AlgoliaPaginate<I>(query, indexUid, algolia, totalItems);
+            return await AlgoliaPaginate<I>(query, indexUid, algolia);
         }
 
         public static async Task<ActionResult> AlgoliaPaginate<T>(
             string query,
             string indexUid,
             SearchClient algolia,
-            int totalItems,
             Dictionary<string,dynamic> metadata = null
         ) where T : class
         {
@@ -132,7 +130,6 @@ namespace Lizelaser0310.Utilities
             string query,
             string indexUid,
             ElasticClient elastic,
-            int totalItems,
             Func<T,string> primaryKey,
             List<Expression<Func<T,dynamic>>> fields,
             Dictionary<string,dynamic> metadata = null
